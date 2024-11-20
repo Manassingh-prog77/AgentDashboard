@@ -1,12 +1,28 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { FaCog, FaHashtag, FaCalendar } from "react-icons/fa";
 import { BsSoundwave } from "react-icons/bs";
 import { Input } from "@/components/ui/input";
 
+// Define Voice and Language types
+type Voice = {
+  accent: string;
+  voice_name: string;
+  gender: "male" | "female";
+};
+
+type Language = {
+  name: string;
+  voices: {
+    name: string;
+    gender: "Male" | "Female";
+  }[];
+};
+
 // SidebarLeft Component to fetch and display voices data
 const SidebarLeft = () => {
-  const [voicesData, setVoicesData] = useState<any[]>([]); // State to store voices data
+  const [voicesData, setVoicesData] = useState<Voice[]>([]); // State to store voices data
   const [loading, setLoading] = useState<boolean>(true); // To handle loading state
   const [error, setError] = useState<string | null>(null); // To handle errors
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -14,7 +30,6 @@ const SidebarLeft = () => {
   useEffect(() => {
     const fetchVoicesData = async () => {
       try {
-        // Fetch the voices data from the API
         const response = await fetch("https://api.retellai.com/list-voices", {
           method: "GET",
           headers: {
@@ -26,10 +41,10 @@ const SidebarLeft = () => {
           throw new Error("Failed to fetch voices data");
         }
 
-        const data = await response.json();
-        setVoicesData(data); // Set voices data from the API response
+        const data: Voice[] = await response.json();
+        setVoicesData(data);
       } catch (error) {
-        setError("Error fetching voices data");
+        setError((error as Error).message || "Error fetching voices data");
         console.error("Error fetching voices data:", error);
       } finally {
         setLoading(false);
@@ -37,10 +52,10 @@ const SidebarLeft = () => {
     };
 
     fetchVoicesData();
-  }, []); // This effect runs only once when the component mounts
+  }, []);
 
   // Group the voices by language (based on accent)
-  const languages = [
+  const languages: Language[] = [
     { name: "English", voices: [] },
     { name: "Spanish", voices: [] },
     { name: "French", voices: [] },
@@ -48,30 +63,24 @@ const SidebarLeft = () => {
 
   // Assign the voices to their respective languages based on the accent
   voicesData.forEach((voice) => {
-    if (voice.accent === "American") {
-      languages[0].voices.push({
-        name: voice.voice_name,
-        gender: voice.gender === "male" ? "Male" : "Female",
-      });
-    } else if (voice.accent === "Spanish") {
-      languages[1].voices.push({
-        name: voice.voice_name,
-        gender: voice.gender === "male" ? "Male" : "Female",
-      });
-    } else if (voice.accent === "French") {
-      languages[2].voices.push({
-        name: voice.voice_name,
-        gender: voice.gender === "male" ? "Male" : "Female",
-      });
+    const { accent, voice_name, gender } = voice;
+    const genderFormatted = gender === "male" ? "Male" : "Female";
+
+    if (accent === "American") {
+      languages[0].voices.push({ name: voice_name, gender: genderFormatted });
+    } else if (accent === "Spanish") {
+      languages[1].voices.push({ name: voice_name, gender: genderFormatted });
+    } else if (accent === "French") {
+      languages[2].voices.push({ name: voice_name, gender: genderFormatted });
     }
   });
 
   if (loading) {
-    return <div>Loading...</div>; // Show loading state
+    return <div>Loading...</div>;
   }
 
   if (error) {
-    return <div>{error}</div>; // Show error message if fetch failed
+    return <div className="text-red-500">{error}</div>;
   }
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,8 +103,8 @@ const SidebarLeft = () => {
         <Input
           placeholder="🔍 Search Voice/Language"
           className="w-full border-gray-300 rounded-md"
-          value={searchQuery} // Controlled component
-          onChange={handleSearchChange} // Handle input change
+          value={searchQuery}
+          onChange={handleSearchChange}
         />
       </div>
 
@@ -132,7 +141,9 @@ const SidebarLeft = () => {
                   </div>
                 ))
               ) : (
-                <div className="text-center text-gray-500">No voices available</div>
+                <div className="text-center text-gray-500">
+                  No voices available
+                </div>
               )}
             </div>
           </div>
