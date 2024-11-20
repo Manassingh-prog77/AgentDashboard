@@ -4,18 +4,18 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectItem,
-  SelectTrigger,
-  SelectContent,
-  SelectValue,
-} from "@/components/ui/select";
 import { useParams } from "next/navigation";
+interface Message {
+    sender: string;
+    text: string;
+  }
+interface ApiPayload {
+    [key: string]: unknown; // Generic object to represent dynamic payloads
+ }
 
 export default function Layout() {
   const [activeTab, setActiveTab] = useState("Test Call");
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("+1 123 456 7890");
   const [name, setName] = useState("");
@@ -28,7 +28,7 @@ export default function Layout() {
   };
 
   // Helper function for API requests
-  const apiRequest = async (url, payload) => {
+  const apiRequest = async (url:string, payload: ApiPayload) => {
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -41,9 +41,9 @@ export default function Layout() {
         throw new Error(data.message || "Something went wrong");
       }
       return data;
-    } catch (error) {
+    } catch (error:unknown) {
       console.error(error);
-      alert(error.message || "An unexpected error occurred.");
+      alert("An unexpected error occurred.");
       return null;
     }
   };
