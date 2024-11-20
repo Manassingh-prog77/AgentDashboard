@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Table,
   TableBody,
@@ -9,10 +10,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+
+// Define types for agent data
+interface Agent {
+  agent_id: string;
+  agent_name: string;
+  response_engine: { type: string };
+  voice_id: string;
+  last_modification_timestamp: number;
+}
 
 // Utility to format timestamp
 const formatDate = (timestamp: number) =>
@@ -25,9 +41,9 @@ const formatDate = (timestamp: number) =>
   });
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [agentsData, setAgentsData] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [agentsData, setAgentsData] = useState<Agent[]>([]); // Use Agent type
   const rowsPerPage = 5;
   const router = useRouter();
 
@@ -40,7 +56,7 @@ export default function Home() {
             Authorization: "Bearer key_caba942c1deb87e371563fadf38e",
           },
         });
-        const data = await response.json();
+        const data: Agent[] = await response.json(); // Enforce Agent type for API response
         setAgentsData(data);
       } catch (error) {
         console.error("Error fetching agents data:", error);
@@ -51,8 +67,8 @@ export default function Home() {
   }, []);
 
   const filteredAgents =
-    agentsData && agentsData.length > 0
-      ? agentsData.filter((agent: any) =>
+    agentsData.length > 0
+      ? agentsData.filter((agent) =>
           agent.agent_name.toLowerCase().includes(searchQuery.toLowerCase())
         )
       : [];
@@ -64,7 +80,7 @@ export default function Home() {
   );
 
   const handleRowClick = (id: string) => {
-   router.push(`/components/agents/${id}`); // Navigate to the agent detail page with the agent's ID
+    router.push(`/components/agents/${id}`); // Navigate to the agent detail page with the agent's ID
   };
 
   return (
@@ -90,7 +106,9 @@ export default function Home() {
               <SelectItem value="multi-prompt-agent" disabled>
                 Multi-Prompt Agent
               </SelectItem>
-              <SelectItem value="custom-llm" disabled>Custom LLM</SelectItem>
+              <SelectItem value="custom-llm" disabled>
+                Custom LLM
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -103,23 +121,37 @@ export default function Home() {
             </TableCaption>
             <TableHeader>
               <TableRow className="bg-blue-500 text-black">
-                <TableHead className="px-4 py-3 text-left text-white text-sm font-semibold">Agent Name</TableHead>
-                <TableHead className="px-4 py-3 text-left text-white text-sm font-semibold">Agent Type</TableHead>
-                <TableHead className="px-4 py-3 text-left text-white text-sm font-semibold">Voice</TableHead>
-                <TableHead className="px-4 py-3 text-left text-white text-sm font-semibold">Edited By</TableHead>
+                <TableHead className="px-4 py-3 text-left text-white text-sm font-semibold">
+                  Agent Name
+                </TableHead>
+                <TableHead className="px-4 py-3 text-left text-white text-sm font-semibold">
+                  Agent Type
+                </TableHead>
+                <TableHead className="px-4 py-3 text-left text-white text-sm font-semibold">
+                  Voice
+                </TableHead>
+                <TableHead className="px-4 py-3 text-left text-white text-sm font-semibold">
+                  Edited By
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedData.length > 0 ? (
-                paginatedData.map((agent, index) => (
+                paginatedData.map((agent) => (
                   <TableRow
-                    key={index}
+                    key={agent.agent_id}
                     className="hover:bg-gray-100 transition-all cursor-pointer"
                     onClick={() => handleRowClick(agent.agent_id)}
                   >
-                    <TableCell className="px-4 py-3 text-sm">{agent.agent_name}</TableCell>
-                    <TableCell className="px-4 py-3 text-sm">{agent.response_engine.type}</TableCell>
-                    <TableCell className="px-4 py-3 text-sm">{agent.voice_id}</TableCell>
+                    <TableCell className="px-4 py-3 text-sm">
+                      {agent.agent_name}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-sm">
+                      {agent.response_engine.type}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-sm">
+                      {agent.voice_id}
+                    </TableCell>
                     <TableCell className="px-4 py-3 text-sm">
                       {formatDate(agent.last_modification_timestamp)}
                     </TableCell>
